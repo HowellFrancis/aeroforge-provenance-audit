@@ -6,9 +6,9 @@ This repository documents a smart contract vulnerability simulation conducted by
 2. Simulate a forged CoA injection
 3. Demonstrate exploit feasibility
 4. Patch the vulnerability and validate remediation
-5. Publish a redacted public disclosure 
-##Project Structure
-##project Structure  
+5. Publish a redacted public disclosure
+
+##Project Structure  
   -'contracts/'
     - 'VulnProvenance.sol' vulnerable contract  
     - 'HardenedProvenance.sol' - patched version
@@ -25,7 +25,7 @@ This repository documents a smart contract vulnerability simulation conducted by
 |  Repudiation  | Overwriting CoAs  |  Unlogged  |  Emit event logs  |  
 |  Info Disclosure  |  CoA hash leak  |  Public  |  Optional hash salt  |  
 |  Denial of Service  | Flood contract with fake CoAs  |  None  | Submisison rate limiting |  
-|  Elevation of Privilege |  Any address can submit  | Open  | Resrtict to konwn vendor wallet list |  
+|  Elevation of Privilege |  Any address can submit  | Open  | Restrict to known vendor wallet list |  
   
 ## Technologies  
   - AWS CloudShell EDE
