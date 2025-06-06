@@ -18,7 +18,7 @@ This repository documents a smart contract vulnerability simulation conducted by
   
 ## Threat Model Summary (STRIDE)  
 |  Threat  |  Example  |  Control (Pre-Patch)  |  Control (Post-Patch)  |  
-|  Spoofing  |  Fake CoA hash accepted  |  None  | Signature verification  |
+|  Spoofing  |  Fake CoA hash accepted  |  None  | Signature verification  |  
 |  Tampering  | Metadata hash mismatch  | None  | Immutable timestamp, merkle root validation  |  
 |  Repudiation  | Overwriting CoAs  |  Unlogged  |  Emit event logs  |  
 |  Info Disclosure  |  CoA hash leak  |  Public  |  Optional hash salt  |  
