@@ -9,9 +9,7 @@ This repository documents a smart contract vulnerability simulation conducted by
 5. Publish a redacted public disclosure
 
 ## Project Structure  
-  -'contracts/'
-    - 'VulnProvenance.sol' vulnerable contract  
-    - 'HardenedProvenance.sol' - patched version
+  - 'contracts/' - 'VulnProvenance.sol' vulnerable contract, 'HardenedProvenance.sol' - patched version
   - 'exploit/' - proof-of-concept attack scripts
   - 'scripts/' - deployment and testing automation
   - 'tests/' - test harness for regression validation
