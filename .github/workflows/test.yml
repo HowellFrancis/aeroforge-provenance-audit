@@ -1,0 +1,15 @@
+name: Run Tests
+
+on:  
+  push:  
+    branches: [main]  
+
+jobs:  
+  test:  
+    runs-on: ubuntu-latest  
+    steps:  
+      - uses: actions/checkout@v2
+      - name: Install Foundry  
+        run: curl -L https://foundry.paradigm.xyz | bash  
+      - name: Run Tests  
+        run: forge test

@@ -1,0 +1,1 @@
+This project is maintained as a security simulation. All code and documentation should follow auditability and readibility standards. Write meaningful commit messages and maintain clean git history.  
