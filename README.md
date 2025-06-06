@@ -8,7 +8,7 @@ This repository documents a smart contract vulnerability simulation conducted by
 4. Patch the vulnerability and validate remediation
 5. Publish a redacted public disclosure
 
-##Project Structure  
+## Project Structure  
   -'contracts/'
     - 'VulnProvenance.sol' vulnerable contract  
     - 'HardenedProvenance.sol' - patched version
