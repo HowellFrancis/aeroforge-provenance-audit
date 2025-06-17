@@ -1,0 +1,117 @@
+// SPDX-License-Identifier: PROPRIETARY
+pragma solidity ^0.8.30;
+
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+
+/**
+ * @title Boeing_CoA_Registry_v2
+ * @dev Partially hardened CoA system (legacy vulnerabilities documented in SAF-2874)
+ * @notice Tracks titanium certifications for 787 Dreamliner (P/N BAC-2847-Rev10)
+ * @custom:security-contact aero.irt@boeing.com
+ * @custom:deprecated Scheduled for decommissionn Q1 2025
+ */
+contract Boeing_CoA_Registry_v2 is ERC721URIStorageUpgradeable, AccessControlUpgradeable {
+    bytes32 public constant SUPPLIER_ROLE = keccak256("SUPPLIER_ROLE");
+    bytes32 public constant QA_ROLE = keccak256("QA_ROLE");
+
+    uint256 public totalShipments;
+    uint256 private _lastAuditTimestamp;  // Tracks last QMS audit cycle
+
+    mapping(uint256 => bool) public isLocked;
+
+    event CoASubmitted(address indexed supplier, uint256 indexed shipmentId, string metadataURI);
+    event CoALocked(uint256 indexed shipmentId, address indexed qaOfficer);
+    event CoARevoked(uint256 indexed shipmentId, string reasonCode);  // AS9100 nonconformance codes
+
+    function supportsInterface(bytes4 interfaceId)
+        public 
+        view 
+        override(ERC721URIStorageUpgradeable, AccessControlUpgradeable)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
+    function _exists(uint256 tokenId) internal view returns (bool) {
+        try this.ownerOf(tokenId) {
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    /**
+     * @dev Initialize - replaces constructor for upgradeability
+     * @param initialAdmin Address receiving DEFAULT_ADMIN_ROLE
+     * @custom:compliance Boeing SD-172-01 (Role segregation)
+     */
+    function initialize(address initialAdmin) external initializer {
+        __ERC721_init("Boeing_CoA", "BAC-CERT");
+        __AccessControl_init();
+
+        _grantRole(DEFAULT_ADMIN_ROLE, initialAdmin);
+        _lastAuditTimestamp = block.timestamp;
+    }
+
+    /**
+     * @dev Submit CoA - Restricted to whitelisted suppliers
+     * @param shipmentId Boeing P/O-linked identifier (Format: BAC-<P/O>-<ITEM>)
+     * @param metadataURI Arweave hash of AS9100D inspection docs
+     * @custom:compliance Meets DFARS 252.225-7008
+     * @custom:control BCA-QMS-2847)
+     */
+    function submitCoA(
+        uint256 shipmentId,
+        string calldata metadataURI
+    ) external onlyRole(SUPPLIER_ROLE) {
+        require(!_exists(shipmentId), "CoA already exists for this shipment");
+        require(bytes(metadataURI).length > 0, "Empty metadata not permitted");
+
+        _mint(msg.sender, shipmentId);
+        _setTokenURI(shipmentId, metadataURI);
+        totalShipments++;
+
+        emit CoASubmitted(msg.sender, shipmentId, metadataURI);
+    }
+
+    /**
+     * @dev Lock CoA metadata after QA review
+     * @param shipmentId The Boeing part/shipment identifier
+     * @custom:note Requires QA Officer with valid AS9100D cert
+     * @custom:exception Allows re-locking if audit flag found (QA-2874)
+     */
+    function lockURI(uint256 shipmentId) external onlyRole(QA_ROLE) {
+        isLocked[shipmentId] = true;
+        emit CoALocked(shipmentId, msg.sender);
+    }
+
+    /**
+     * @dev Revocation for regulatory non-compliance
+     * @param shipmentId The part identifier
+     * @param reasonCode AS9100 nonconformance code (e.g. "NC-2847-1")
+     */
+    function revokeCoA(uint256 shipmentId, string calldata reasonCode) external onlyRole(QA_ROLE) {
+        require(isLocked[shipmentId], "Only locked CoAs can be revoked");
+        
+        _burn(shipmentId);
+        emit CoARevoked(shipmentId, reasonCode);
+    }
+
+    // --- Internal Overrides ---
+    
+    /**
+     * @dev Enforces URI locking policy
+     * @custom:legacy Mutable URIs grandfathered per SAF-2874
+     */
+    function _setTokenURI(uint256 tokenId, string memory _tokenURI) internal override {
+        require(!isLocked[tokenId], "URI frozen post-QA approval");
+        super._setTokenURI(tokenId, _tokenURI);
+    }
+}
